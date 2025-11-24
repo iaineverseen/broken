@@ -1,11 +1,9 @@
 local cloneref = (cloneref or function(x) return x end)
 
--- Services
 local TS = cloneref(game:GetService("TweenService"))
 local UIS = cloneref(game:GetService("UserInputService"))
 local CG = cloneref(game:GetService("CoreGui"))
 
--- Constants
 local C3new, U2new, V2new = Color3.new, UDim2.new, Vector2.new
 local EFG = Enum.Font.Gotham
 local EES = Enum.EasingStyle
@@ -30,9 +28,10 @@ local TWEEN = {
     Fast   = TweenInfo.new(0.10, EES.Quad, EED.Out),
     Normal = TweenInfo.new(0.20, EES.Quad, EED.Out),
     Slow   = TweenInfo.new(0.30, EES.Quad, EED.Out),
+    DropdownOpen = TweenInfo.new(0.15, EES.Quad, EED.Out),
+    DropdownClose = TweenInfo.new(0.12, EES.Quad, EED.Out),
 }
 
--- Utility Functions
 local function create(className, props)
     local inst = Instance.new(className)
     for k, v in pairs(props) do 
@@ -93,13 +92,11 @@ local function bindListAutoSize(holder, list, extraY)
     return connections
 end
 
--- Cleanup previous instances
 pcall(function()
     local existing = CG:FindFirstChild("Sentinel")
     if existing then existing:Destroy() end
 end)
 
--- Library Implementation
 local Library = {}
 
 function Library:Window(title)
@@ -112,7 +109,6 @@ function Library:Window(title)
         ResetOnSpawn = false,
     })
 
-    -- Main Container
     local Main = create("Frame", {
         Name = "Main",
         Parent = ui,
@@ -125,7 +121,6 @@ function Library:Window(title)
     })
     rounded(Main, 6)
 
-    -- Shadow Effect
     create("ImageLabel", {
         Name = "Shadow",
         Parent = Main,
@@ -140,7 +135,6 @@ function Library:Window(title)
         SliceCenter = Rect.new(23, 23, 277, 277),
     })
 
-    -- UI Components Creation
     local tabs = create("Frame", {
         Name = "tabs",
         Parent = Main,
@@ -160,7 +154,6 @@ function Library:Window(title)
     })
     rounded(Top, 6)
 
-    -- Header Components
     do
         create("Frame", {
             Name = "Cover",
@@ -233,7 +226,6 @@ function Library:Window(title)
         ClipsDescendants = true,
     })
 
-    -- Tabs Container
     local TabsContainer = create("ScrollingFrame", {
         Name = "TabsContainer",
         Parent = tabs,
@@ -263,7 +255,6 @@ function Library:Window(title)
 
     bindListAutoSize(TabsContainer, TabsListLayout, 15)
 
-    -- Mobile Support
     local DeviceType = UIS.TouchEnabled and "Mobile" or "PC"
     local MobileToggleButton, uitoggled = nil, false
     
@@ -290,7 +281,6 @@ function Library:Window(title)
             ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
         })
 
-        -- Dragging functionality
         do
             local dragging, dragInput, dragStart, startPos
             MobileToggleButton.InputBegan:Connect(function(input)
@@ -394,7 +384,6 @@ function Library:Window(title)
 
         bindListAutoSize(Page, PageListLayout, 15)
 
-        -- Set first tab as active
         if firstTab then
             Page.Visible = true
             TabButton.BackgroundTransparency = 0.6
@@ -402,7 +391,6 @@ function Library:Window(title)
             firstTab = false
         end
 
-        -- Tab switching logic
         TabButton.MouseButton1Click:Connect(function()
             for _, v in ipairs(Pages:GetChildren()) do
                 if v:IsA("ScrollingFrame") then 
@@ -795,10 +783,9 @@ function Library:Window(title)
             local function setDropped(state)
                 dropped = state
                 if dropped then
-                    Dropdown:TweenSize(
-                        U2new(1, -7, 0, DropdownListLayout.AbsoluteContentSize.Y), 
-                        EED.Out, EES.Quad, 0.15, true
-                    )
+                    tweenPlay(Dropdown, "DropdownOpen", { 
+                        Size = U2new(1, -7, 0, DropdownListLayout.AbsoluteContentSize.Y) 
+                    })
                     tweenPlay(arrow, "Normal", { 
                         Rotation = 180, 
                         BackgroundTransparency = 0.2 
@@ -808,10 +795,9 @@ function Library:Window(title)
                         Rotation = 0, 
                         BackgroundTransparency = 0.5 
                     })
-                    Dropdown:TweenSize(
-                        U2new(1, -7, 0, 34), 
-                        EED.Out, EES.Quad, 0.12, true
-                    )
+                    tweenPlay(Dropdown, "DropdownClose", { 
+                        Size = U2new(1, -7, 0, 34) 
+                    })
                 end
             end
 
