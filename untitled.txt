@@ -111,37 +111,6 @@ local function InitializeNotificationSystem()
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
         ResetOnSpawn = false,
     })
-
-    local Holder = create("ScrollingFrame", {
-        Name = "Holder",
-        Parent = NotifUI,
-        Active = true,
-        AnchorPoint = Vector2.new(1, 0),
-        BackgroundColor3 = COLORS.White,
-        BackgroundTransparency = 1.000,
-        BorderColor3 = COLORS.Black,
-        BorderSizePixel = 0,
-        Position = U2new(1, -10, 0, 10),
-        Size = U2new(0.25, 0, 0.4, 0),
-        CanvasSize = U2new(0, 0, 0, 0),
-        ScrollBarThickness = 3,
-        ScrollBarImageColor3 = COLORS.Accent,
-        ScrollingEnabled = true,
-        ClipsDescendants = true,
-    })
-
-    local Sorter = create("UIListLayout", {
-        Name = "Sorter",
-        Parent = Holder,
-        HorizontalAlignment = Enum.HorizontalAlignment.Center,
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        VerticalAlignment = Enum.VerticalAlignment.Bottom,
-        Padding = UDim.new(0, 10),
-    })
-
-    rounded(Holder, 6)
-    
-    bindListAutoSize(Holder, Sorter, 20)
 end
 
 local function SetDefault(v1, v2)
@@ -173,18 +142,17 @@ function NotificationSystem:Notify(Options)
     }
     Options = SetDefault(Options, Default)
     
-    local Holder = NotifUI:FindFirstChild("Holder")
-    if not Holder then return end
-    
+    -- Create notification directly under NotifUI (no scrolling frame)
     local Notification = create("Frame", {
         Name = "Notification",
-        Parent = Holder,
+        Parent = NotifUI,
         BackgroundColor3 = COLORS.NotificationBg,
         BackgroundTransparency = 0.1,
         BorderColor3 = COLORS.NotificationBorder,
         BorderSizePixel = 1,
-        Size = U2new(0.9, 0, 0, 120),
-        LayoutOrder = 999999,
+        Size = U2new(0, 280, 0, 120),
+        Position = U2new(1, -300, 0, 10),
+        AnchorPoint = Vector2.new(1, 0),
     })
     rounded(Notification, 6)
 
@@ -195,13 +163,10 @@ function NotificationSystem:Notify(Options)
         Transparency = 0.3,
     })
 
-    local UICorner = rounded(Notification)
-
     local TitleLabel = create("TextLabel", {
         Parent = Notification,
         BackgroundColor3 = COLORS.White,
         BackgroundTransparency = 1.000,
-        BorderColor3 = COLORS.BorderColor3,
         Position = U2new(0.05, 0, 0.05, 0),
         Size = U2new(0.9, 0, 0, 25),
         Font = EFG,
@@ -216,7 +181,6 @@ function NotificationSystem:Notify(Options)
         Parent = Notification,
         BackgroundColor3 = COLORS.White,
         BackgroundTransparency = 1.000,
-        BorderColor3 = COLORS.BorderColor3,
         Position = U2new(0.05, 0, 0.3, 0),
         Size = U2new(0.9, 0, 0.45, 0),
         Font = Enum.Font.Gotham,
@@ -281,10 +245,19 @@ function NotificationSystem:Notify(Options)
         end)
     end
 
+    -- Position notification above existing ones
+    local yOffset = 10
+    for _, child in ipairs(NotifUI:GetChildren()) do
+        if child:IsA("Frame") and child.Name == "Notification" and child ~= Notification then
+            yOffset = yOffset + child.Size.Y.Offset + 10
+        end
+    end
+    Notification.Position = U2new(1, -300, 0, yOffset)
+
     -- Animate in
     Notification.Size = U2new(0, 0, 0, 0)
     tweenPlay(Notification, "NotificationIn", {
-        Size = U2new(0.9, 0, 0, 120)
+        Size = U2new(0, 280, 0, 120)
     })
 
     -- Auto-remove if not set to never expire
