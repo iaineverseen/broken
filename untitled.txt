@@ -341,7 +341,7 @@ function Library:Window(title)
         end)
     end
 
-    -- Notification System
+    -- Compact Notification System
     local NotifUI = create("ScreenGui", {
         Name = "SentinelNotifications",
         Parent = CG,
@@ -392,48 +392,41 @@ function Library:Window(title)
                 }
             },
             Title = 'Notification',
-            Content = 'Placeholder notification content',
+            Content = 'Placeholder content',
             Length = 5,
             NeverExpire = false
         }
         Options = SetDefault(Options, Default)
         
-        -- Same size for both mobile and PC - smaller for mobile
-        local notificationWidth = 250
-        local notificationHeight = 100
+        -- Compact size that works for both mobile and PC
+        local notificationWidth = 220
+        local notificationHeight = 80
         
-        -- Create notification
+        -- Create compact notification
         local Notification = create("Frame", {
             Name = "Notification",
             Parent = NotifUI,
             BackgroundColor3 = COLORS.NotificationBg,
             BackgroundTransparency = 0.1,
-            BorderColor3 = COLORS.NotificationBorder,
             BorderSizePixel = 1,
+            BorderColor3 = COLORS.Accent,
             Size = U2new(0, notificationWidth, 0, notificationHeight),
             Position = U2new(1, -10, 0, 10),
             AnchorPoint = Vector2.new(1, 0),
             ZIndex = 100,
         })
-        rounded(Notification, 6)
+        rounded(Notification, 4)
 
-        create("UIStroke", {
-            Parent = Notification,
-            Color = COLORS.Accent,
-            Thickness = 1,
-            Transparency = 0.3,
-        })
-
+        -- Compact title and content layout
         local TitleLabel = create("TextLabel", {
             Parent = Notification,
-            BackgroundColor3 = COLORS.White,
-            BackgroundTransparency = 1.000,
-            Position = U2new(0.05, 0, 0.05, 0),
-            Size = U2new(0.9, 0, 0, 20),
+            BackgroundTransparency = 1,
+            Position = U2new(0.05, 0, 0.1, 0),
+            Size = U2new(0.9, 0, 0, 18),
             Font = EFG,
             Text = Options.Title,
             TextColor3 = COLORS.Accent,
-            TextSize = 14,
+            TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextTruncate = Enum.TextTruncate.AtEnd,
             ZIndex = 101,
@@ -441,25 +434,25 @@ function Library:Window(title)
 
         local ContentLabel = create("TextLabel", {
             Parent = Notification,
-            BackgroundColor3 = COLORS.White,
-            BackgroundTransparency = 1.000,
-            Position = U2new(0.05, 0, 0.3, 0),
-            Size = U2new(0.9, 0, 0.45, 0),
+            BackgroundTransparency = 1,
+            Position = U2new(0.05, 0, 0.45, 0),
+            Size = U2new(0.9, 0, 0, 30),
             Font = Enum.Font.Gotham,
             Text = Options.Content,
             TextColor3 = COLORS.LightGray,
-            TextSize = 12,
+            TextSize = 11,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Top,
             ZIndex = 101,
         })
 
+        -- Compact button container
         local ButtonContainer = create("Frame", {
             Parent = Notification,
             BackgroundTransparency = 1,
             Position = U2new(0.05, 0, 0.8, 0),
-            Size = U2new(0.9, 0, 0.15, 0),
+            Size = U2new(0.9, 0, 0, 15),
             ZIndex = 101,
         })
 
@@ -468,26 +461,26 @@ function Library:Window(title)
             FillDirection = Enum.FillDirection.Horizontal,
             HorizontalAlignment = Enum.HorizontalAlignment.Right,
             SortOrder = Enum.SortOrder.LayoutOrder,
-            Padding = UDim.new(0, 5),
+            Padding = UDim.new(0, 4),
         })
 
-        -- Create buttons
+        -- Create compact buttons
         for i, btnData in ipairs(Options.Buttons) do
             local Button = create("TextButton", {
                 Name = "Button_" .. i,
                 Parent = ButtonContainer,
                 BackgroundColor3 = COLORS.Button,
                 BorderSizePixel = 0,
-                Size = U2new(0, 70, 1, 0),
+                Size = U2new(0, 60, 1, 0),
                 AutoButtonColor = false,
                 Font = EFG,
-                Text = btnData.Title or "Button",
+                Text = btnData.Title or "Btn",
                 TextColor3 = COLORS.White,
-                TextSize = 12,
+                TextSize = 11,
                 LayoutOrder = i,
                 ZIndex = 102,
             })
-            rounded(Button, 4)
+            rounded(Button, 3)
             
             onHover(Button, 
                 { BackgroundColor3 = COLORS.ButtonHover }, 
@@ -499,7 +492,6 @@ function Library:Window(title)
                     task.spawn(btnData.Callback)
                 end
                 if btnData.ClosesUI then
-                    -- Animate out before destroying
                     tweenPlay(Notification, "NotificationOut", {
                         Size = U2new(0, 0, 0, 0),
                         BackgroundTransparency = 1
@@ -528,13 +520,11 @@ function Library:Window(title)
             task.delay(Options.Length, function()
                 if not Notification or not Notification.Parent then return end
                 
-                -- Animate out
                 tweenPlay(Notification, "NotificationOut", {
                     Size = U2new(0, 0, 0, 0),
                     BackgroundTransparency = 1
                 })
                 
-                -- Destroy after animation
                 task.wait(0.4)
                 if Notification and Notification.Parent then
                     Notification:Destroy()
@@ -1149,7 +1139,7 @@ function Library:Window(title)
             end)
         end
 
-        -- Add Notification function to tab functions
+        -- Add compact Notification function to tab functions
         function TabFunctions:Notify(Options)
             return CreateNotification(Options)
         end
