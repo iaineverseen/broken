@@ -1,0 +1,219 @@
+local TurtleUiLib = {
+    windowCount = 0,
+    windows = {}
+}
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TurtleUiLib"
+screenGui.Parent = gethui()
+screenGui.ResetOnSpawn = false
+
+local function makeDraggable(frame)
+    local dragging, dragStart, startPos
+    
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    frame.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or 
+                         input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+function TurtleUiLib:Window(name)
+    self.windowCount += 1
+    local id = self.windowCount
+    
+    local state = {
+        size = 33,
+        listOffset = 10
+    }
+    self.windows[id] = state
+    
+    local zIndex = id * 7
+    local xOffset = 20 + (id - 1) * 230
+    
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "UiWindow"
+    mainFrame.Parent = screenGui
+    mainFrame.BackgroundColor3 = Color3.fromRGB(0, 151, 230)
+    mainFrame.BorderColor3 = Color3.fromRGB(0, 151, 230)
+    mainFrame.Position = UDim2.new(0, xOffset, 0, 20)
+    mainFrame.Size = UDim2.new(0, 207, 0, 33)
+    mainFrame.ZIndex = 4 + zIndex
+    mainFrame.Active = true
+    makeDraggable(mainFrame)
+    
+    local header = Instance.new("Frame")
+    header.Name = "Header"
+    header.Parent = mainFrame
+    header.BackgroundColor3 = Color3.fromRGB(0, 168, 255)
+    header.BorderColor3 = Color3.fromRGB(0, 168, 255)
+    header.Size = UDim2.new(0, 207, 0, 26)
+    header.ZIndex = 5 + zIndex
+    
+    local headerText = Instance.new("TextLabel")
+    headerText.Name = "HeaderText"
+    headerText.Parent = header
+    headerText.BackgroundTransparency = 1
+    headerText.Size = UDim2.new(0, 206, 0, 33)
+    headerText.Font = Enum.Font.SourceSans
+    headerText.Text = name or "Window"
+    headerText.TextColor3 = Color3.fromRGB(47, 54, 64)
+    headerText.TextSize = 17
+    headerText.ZIndex = 6 + zIndex
+    
+    local minimizeBtn = Instance.new("TextButton")
+    minimizeBtn.Name = "Minimise"
+    minimizeBtn.Parent = header
+    minimizeBtn.BackgroundColor3 = Color3.fromRGB(0, 168, 255)
+    minimizeBtn.BorderColor3 = Color3.fromRGB(0, 168, 255)
+    minimizeBtn.Position = UDim2.new(0, 185, 0, 2)
+    minimizeBtn.Size = UDim2.new(0, 22, 0, 22)
+    minimizeBtn.Font = Enum.Font.SourceSansLight
+    minimizeBtn.Text = "_"
+    minimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    minimizeBtn.TextSize = 20
+    minimizeBtn.ZIndex = 7 + zIndex
+    
+    local container = Instance.new("Frame")
+    container.Name = "Window"
+    container.Parent = header
+    container.BackgroundColor3 = Color3.fromRGB(47, 54, 64)
+    container.BorderColor3 = Color3.fromRGB(47, 54, 64)
+    container.Size = UDim2.new(0, 207, 0, 33)
+    container.ZIndex = 1 + zIndex
+    
+    minimizeBtn.MouseButton1Click:Connect(function()
+        container.Visible = not container.Visible
+        minimizeBtn.Text = container.Visible and "_" or "+"
+    end)
+    
+    local window = {}
+    
+    local function reserve(height)
+        state.size += height
+        state.listOffset += height
+        container.Size = UDim2.new(0, 207, 0, state.size + 10)
+        return state.listOffset
+    end
+    
+    function window:Button(text, callback)
+        local y = reserve(32)
+        
+        local btn = Instance.new("TextButton")
+        btn.Name = "Button"
+        btn.Parent = container
+        btn.BackgroundColor3 = Color3.fromRGB(53, 59, 72)
+        btn.BorderColor3 = Color3.fromRGB(113, 128, 147)
+        btn.Position = UDim2.new(0, 12, 0, y)
+        btn.Size = UDim2.new(0, 182, 0, 26)
+        btn.ZIndex = 2 + zIndex
+        btn.Font = Enum.Font.SourceSans
+        btn.Text = text or "Button"
+        btn.TextColor3 = Color3.fromRGB(245, 246, 250)
+        btn.TextSize = 16
+        btn.TextWrapped = true
+        btn.MouseButton1Click:Connect(callback or function() end)
+    end
+    
+    function window:Label(text, color)
+        local y = reserve(32)
+        
+        local lbl = Instance.new("TextLabel")
+        lbl.Name = "Label"
+        lbl.Parent = container
+        lbl.BackgroundTransparency = 1
+        lbl.Position = UDim2.new(0, 0, 0, y)
+        lbl.Size = UDim2.new(0, 206, 0, 29)
+        lbl.Font = Enum.Font.SourceSans
+        lbl.Text = text or "Label"
+        lbl.TextColor3 = color or Color3.fromRGB(220, 221, 225)
+        lbl.TextSize = 16
+        lbl.ZIndex = 2 + zIndex
+        
+        local labelMethods = {}
+        
+        function labelMethods:Set(newText)
+            lbl.Text = newText
+        end
+        
+        return labelMethods
+    end
+    
+    function window:Toggle(text, initialState, callback)
+        local y = reserve(32)
+        
+        local desc = Instance.new("TextLabel")
+        desc.Name = "ToggleDescription"
+        desc.Parent = container
+        desc.BackgroundTransparency = 1
+        desc.Position = UDim2.new(0, 14, 0, y)
+        desc.Size = UDim2.new(0, 131, 0, 26)
+        desc.Font = Enum.Font.SourceSans
+        desc.Text = text or "Toggle"
+        desc.TextColor3 = Color3.fromRGB(245, 246, 250)
+        desc.TextSize = 16
+        desc.TextXAlignment = Enum.TextXAlignment.Left
+        desc.ZIndex = 2 + zIndex
+        
+        local btn = Instance.new("TextButton")
+        btn.Name = "ToggleButton"
+        btn.Parent = desc
+        btn.BackgroundColor3 = Color3.fromRGB(47, 54, 64)
+        btn.BorderColor3 = Color3.fromRGB(113, 128, 147)
+        btn.Position = UDim2.new(1.2061, 0, 0.0769, 0)
+        btn.Size = UDim2.new(0, 22, 0, 22)
+        btn.Font = Enum.Font.SourceSans
+        btn.Text = ""
+        btn.ZIndex = 2 + zIndex
+        
+        local indicator = Instance.new("Frame")
+        indicator.Name = "ToggleFiller"
+        indicator.Parent = btn
+        indicator.BackgroundColor3 = Color3.fromRGB(68, 189, 50)
+        indicator.BorderColor3 = Color3.fromRGB(47, 54, 64)
+        indicator.Position = UDim2.new(0, 5, 0, 5)
+        indicator.Size = UDim2.new(0, 12, 0, 12)
+        indicator.Visible = initialState or false
+        indicator.ZIndex = 2 + zIndex
+        
+        btn.MouseButton1Click:Connect(function()
+            indicator.Visible = not indicator.Visible
+            if callback then callback(indicator.Visible) end
+        end)
+        
+        local toggleMethods = {}
+        
+        function toggleMethods:Set(value)
+            indicator.Visible = value
+            if callback then callback(value) end
+        end
+        
+        return toggleMethods
+    end
+    
+    return window
+end
+
+return TurtleUiLib
